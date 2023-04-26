@@ -1,10 +1,10 @@
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Navigate, Routes, Route, useNavigate } from "react-router-dom";
 import "./App.css";
 import { MovieList } from "./components/MovieList";
 import { AddMovie } from "./components/AddMovie";
 import { AddColor } from "./components/AddColor";
 import { EditMovie } from "./components/EditMovie";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "@mui/material/Button";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -15,9 +15,19 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
+import Login from "./components/Login.js";
+import Signup from "./components/Signup.js";
+import { API } from './global';
 
 function App() {
   const navigate = useNavigate();
+  const [movieList, setMovieList] = useState([]);
+
+  useEffect(() => {
+    fetch(`${API}/movies`, { method: "GET" })
+      .then((data) => data.json())
+      .then((movies) => setMovieList(movies))
+  }, []);
 
   const [mode, setMode] = useState("light");
   const darkTheme = createTheme({
@@ -25,6 +35,8 @@ function App() {
       mode: mode,
     },
   });
+  
+  
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -67,11 +79,13 @@ function App() {
           </AppBar>
 
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/movies" element={<MovieList />} />
-            <Route path="/addmovie" element={<AddMovie />} />
-            <Route path="/movies/:id" element={<MovieDetails />} />
-            <Route path="/movies/edit/:id" element={<EditMovie />} />
+          <Route exact path='/login' element={<Login />} />
+            <Route exact path='/register' element={<Signup />} />
+            <Route path="/" element={<ProductedRoute><Home /></ProductedRoute>} />
+            <Route path="/movies" element={<ProductedRoute><MovieList /></ProductedRoute>} />
+            <Route path="/addmovie" element={<ProductedRoute><AddMovie /></ProductedRoute>} />
+            <Route path="/movies/:id" element={<ProductedRoute><MovieDetails /></ProductedRoute>} />
+            <Route path="/movies/edit/:id" element={<ProductedRoute><EditMovie /></ProductedRoute>} />
             <Route path="/colorgame" element={<AddColor />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -79,6 +93,12 @@ function App() {
       </Paper>
     </ThemeProvider>
   );
+}
+
+function ProductedRoute({ children }) {
+  const isAuth = localStorage.getItem("token");
+  // console.log(isAuth);
+  return isAuth ? children : <Navigate replace to={"/login"} />;
 }
 
 export default App;
